@@ -2,9 +2,8 @@ package OnlineMAPF.Solvers;
 
 import BasicCBS.Instances.Agent;
 import BasicCBS.Instances.MAPF_Instance;
-import BasicCBS.Solvers.I_Solver;
-import BasicCBS.Solvers.RunParameters;
-import BasicCBS.Solvers.Solution;
+import BasicCBS.Instances.Maps.I_Location;
+import BasicCBS.Solvers.*;
 import Environment.Metrics.InstanceReport;
 import OnlineMAPF.OnlineAgent;
 import OnlineMAPF.OnlineSolution;
@@ -33,12 +32,45 @@ public class OnlineSolverContainer implements I_Solver {
      * The cost of rerouting an agent.
      */
     private int costOfReroute;
+    /**
+     * A queue of agents waiting to enter.
+     */
+    private Queue<OnlineAgent> agentQueue;
+    /**
+     * The maximum allowed number of waiting agents
+     */
+    private int agentQueueCapacity;
+    /**
+     * The maximum number of agents allowed concurrently in the problem space.
+     */
+    private int problemSpaceAgentCapacity;
+    private boolean breachedCapacity;
 
     public OnlineSolverContainer(I_OnlineSolver onlineSolver) {
         if(onlineSolver == null) {
             throw new IllegalArgumentException("null is not an acceptable value for onlineSolver");
         }
         this.onlineSolver = onlineSolver;
+    }
+
+    public void init(MAPF_Instance instance, RunParameters runParameters){
+        verifyAgentsUniqueId(instance.agents);
+
+        this.costOfReroute = runParameters instanceof RunParametersOnline ? ((RunParametersOnline)runParameters).costOfReroute : 0;
+        // must initialize the solver because later we will only be giving it new agents, no other data
+        this.onlineSolver.setEnvironment(instance, runParameters);
+        // check if there is there is a maximum capacity for the problem space or the queue
+        this.agentQueue = new LinkedList<>();
+        if (runParameters instanceof  RunParametersOnline){
+            RunParametersOnline parametersOnline = ((RunParametersOnline)runParameters);
+            this.agentQueueCapacity = Math.max(parametersOnline.agentQueueCapacity, 0);
+            this.problemSpaceAgentCapacity = parametersOnline.problemSpaceAgentCapacity > 0 ? parametersOnline.problemSpaceAgentCapacity : 10000;
+        }
+        else{
+            this.agentQueueCapacity = 0;
+            this.problemSpaceAgentCapacity = 10000;
+        }
+        this.breachedCapacity = false;
     }
 
     /**
@@ -52,34 +84,112 @@ public class OnlineSolverContainer implements I_Solver {
      */
     @Override
     public Solution solve(MAPF_Instance instance, RunParameters parameters) {
-        verifyAgentsUniqueId(instance.agents);
+        init(instance, parameters);
+
         SortedMap<Integer, Solution> solutionsAtTimes = new TreeMap<>();
         SortedMap<Integer, List<OnlineAgent>> agentsForTimes = OnlineSolverContainer.getAgentsByTime(instance.agents);
-        this.costOfReroute = parameters instanceof RunParametersOnline ? ((RunParametersOnline)parameters).costOfReroute : 0;
-        // must initialize the solver because later we will only be giving it new agents, no other data
-        onlineSolver.setEnvironment(instance, parameters);
-        // feed the solver with new agents for every timestep when new agents arrive
+
+        // feed the solver with new agents for every timestep when new agents arrive, or when space becomes available and there are agents in queue
         // agentsForTimes should be a sorted map
-        for (int timestepWithNewAgents :
-                agentsForTimes.keySet()) {
-            List<OnlineAgent> newArrivals = agentsForTimes.get(timestepWithNewAgents);
+        while (! agentsForTimes.isEmpty()) {
+            int timestepWithNewAgents = agentsForTimes.firstKey();
+            // have to copy the list to avoid having two iterators on agentsForTimes open, and throwing
+            // java.util.ConcurrentModificationException when adding to queue
+            List<OnlineAgent> newArrivals = new ArrayList<>(agentsForTimes.get(timestepWithNewAgents));
+            // add the new agents to the queue
+            this.agentQueue.addAll(newArrivals);
+            int agentsInProblem = agentsInProblem(timestepWithNewAgents, solutionsAtTimes);
+            // can insert agents up to capacity
+            int numAgentsToAdd = Math.min( this.problemSpaceAgentCapacity-agentsInProblem , agentQueue.size() );
+            // if the queue exceeds capacity after removing every agent that can be added to the space at this time step
+            // we return null (fail)
+            if (this.agentQueue.size() - numAgentsToAdd > this.agentQueueCapacity) {
+                this.breachedCapacity = true;
+                wrapUp(parameters, null, timestepWithNewAgents);
+                return null;
+            }
+            // add agents to the problem
+            newArrivals.clear();
+            for (int i = 0; i < numAgentsToAdd; i++) {
+                newArrivals.add(this.agentQueue.remove());
+            }
             // get a solution for the agents to follow as of this timestep
             Solution solutionAtTime = onlineSolver.newArrivals(timestepWithNewAgents, newArrivals);
             if(solutionAtTime == null){
-                wrapUp(parameters, null);
+                wrapUp(parameters, null, 0);
                 return null; //probably as timeout
             }
+            // agents that waited in queue should have an amount of stay moves at the start of their plans, equal
+            // to the number of time steps that they waited for.
+            appendStayMovesToStartOfPlans(solutionAtTime, newArrivals, instance);
             // store the solution
             solutionsAtTimes.put(timestepWithNewAgents, solutionAtTime);
+//            // if space will become available before the next group of new agents, we want to give the solver a chance
+//            // to add the agents in the queue. add an empty set of new agents at the end time of the first agent's plan
+            int closestPlanEndTime = closestPlanEndTime(solutionAtTime, timestepWithNewAgents);
+            agentsForTimes.remove(agentsForTimes.firstKey());
+            if (! agentsForTimes.isEmpty() && ! this.agentQueue.isEmpty() && closestPlanEndTime < agentsForTimes.firstKey()){
+                agentsForTimes.put(closestPlanEndTime, new ArrayList<>(0));
+            }
+            // if there will be no more new arriving agents, still need to empty the queue
+            if(agentsForTimes.isEmpty() && ! this.agentQueue.isEmpty()) {
+                agentsForTimes.put(closestPlanEndTime, new ArrayList<>(0));
+            }
         }
+
         OnlineSolution solution = new OnlineSolution(solutionsAtTimes);
 
         //clear the solver and write the report
-        wrapUp(parameters, solution);
+        wrapUp(parameters, solution, 0);
 
         // combine the stored solutions at times into a single online solution
         return solution;
     }
+
+    private int agentsInProblem(int timestepWithNewAgents, SortedMap<Integer, Solution> solutionsAtTimes) {
+        if (solutionsAtTimes.isEmpty()) return 0;
+        else {
+            int numAgents = 0;
+            for (SingleAgentPlan plan : solutionsAtTimes.get(solutionsAtTimes.lastKey())){
+                if (plan.moveAt(timestepWithNewAgents) != null) numAgents++;
+            }
+            return numAgents;
+        }
+    }
+
+    private Integer closestPlanEndTime(Solution solutionAtTime, int timeNow) {
+        int minEndTime = Integer.MAX_VALUE;
+        for (SingleAgentPlan plan : solutionAtTime){
+            if(plan.getEndTime() > timeNow){
+                minEndTime = Math.min(minEndTime, plan.getEndTime());
+            }
+        }
+        return minEndTime;
+    }
+
+    /**
+     * Agents that waited in queue should have an amount of stay moves at the start of their plans, equal to the number
+     * of times steps that they waited for. Creates new plans with those moves, replaces old plans with the new ones.
+     * @param solutionAtTime the newly found solution for the given agents
+     * @param newArrivals the agents that joined the
+     * @param instance
+     */
+    private void appendStayMovesToStartOfPlans(Solution solutionAtTime, List<OnlineAgent> newArrivals, MAPF_Instance instance) {
+        for (OnlineAgent agent : newArrivals){
+            SingleAgentPlan oldPlan = solutionAtTime.getPlanFor(agent);
+            SingleAgentPlan updatedPlan = new SingleAgentPlan(agent);
+            int numStayMoves = oldPlan.getPlanStartTime() - agent.arrivalTime;
+            I_Location garage = agent.getPrivateGarage(instance.map.getMapCell(agent.source));
+            for (int i = 1; i <= numStayMoves; i++) {
+                updatedPlan.addMove(new Move(agent, agent.arrivalTime + i, garage, garage));
+            }
+            for (Move move : oldPlan){
+                updatedPlan.addMove(move);
+            }
+            solutionAtTime.putPlan(updatedPlan);
+        }
+    }
+
 
     @Override
     public String name() {
@@ -142,7 +252,7 @@ public class OnlineSolverContainer implements I_Solver {
         return onlineAgents;
     }
 
-    private void wrapUp(RunParameters parameters, OnlineSolution solution) {
+    private void wrapUp(RunParameters parameters, OnlineSolution solution, int timestepWithNewAgents) {
         onlineSolver.writeReportAndClearData(solution);
         parameters.instanceReport.putStringValue(InstanceReport.StandardFields.solutionCostFunction, "SOC");
         parameters.instanceReport.putIntegerValue(InstanceReport.StandardFields.COR, costOfReroute);
@@ -152,9 +262,14 @@ public class OnlineSolverContainer implements I_Solver {
             parameters.instanceReport.putIntegerValue(InstanceReport.StandardFields.totalReroutesCost, solution.costOfReroutes(costOfReroute));
             parameters.instanceReport.putStringValue(InstanceReport.StandardFields.solution, solution.readableToString());
             parameters.instanceReport.putIntegerValue(InstanceReport.StandardFields.solved, 1);
+            parameters.instanceReport.putIntegerValue(InstanceReport.StandardFields.capacityBreached, 0);
         }
         else{
             parameters.instanceReport.putIntegerValue(InstanceReport.StandardFields.solved, 0);
+            if(this.breachedCapacity){
+                parameters.instanceReport.putIntegerValue(InstanceReport.StandardFields.capacityBreached, 1);
+                parameters.instanceReport.putIntegerValue(InstanceReport.StandardFields.throughput, timestepWithNewAgents);
+            }
         }
     }
 

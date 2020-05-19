@@ -42,7 +42,7 @@ public class OnlineSolution extends Solution{
      * @param solutionsAtTimes solutions that the solver produced at different times
      * @return a merged solution
      */
-    private static Map<Agent, SingleAgentPlan> mergeSolutions(SortedMap<Integer, Solution> solutionsAtTimes) {
+    public static Map<Agent, SingleAgentPlan> mergeSolutions(SortedMap<Integer, Solution> solutionsAtTimes) {
         Map<Agent, SingleAgentPlan> mergedAgentPlans = new HashMap<>();
         // for every time where new agents arrived (and so the existing plans were changed)
         for (int time :

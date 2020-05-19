@@ -11,10 +11,7 @@ import Environment.Metrics.InstanceReport;
 import Environment.Metrics.S_Metrics;
 import Environment.RunManagerSimpleExample;
 import Environment.TestingBenchmarkRunManager;
-import OnlineMAPF.OnlineInstanceBuilder_BGU;
-import OnlineMAPF.RunManagerOnline;
-import OnlineMAPF.RunManagerOnline2;
-import OnlineMAPF.RunManagerOnlineRuntimes;
+import OnlineMAPF.*;
 import OnlineMAPF.Solvers.OnlineAStar;
 import OnlineMAPF.Solvers.OnlinePP_Solver;
 
@@ -45,13 +42,13 @@ public class Main {
     public static void main(String[] args) {
         if(verifyOutputPath()){
 //            runOnlineRuntimesExperiment();
-            runOnlineExperiment();
-            try {
-                Thread.sleep(1100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            runOnlineExperiment2();
+//            runOnlineExperiment();
+//            try {
+//                Thread.sleep(1100);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+            runOnlineExperimentThroughtput();
 
 //            // write the reports to System.out
 //            addConsoleAsOutputStream();
@@ -73,6 +70,11 @@ public class Main {
 
     public static void runOnlineExperiment2(){
         RunManagerOnline2 runManagerOnline = new RunManagerOnline2();
+        runManagerOnline.runAllExperiments();
+    }
+
+    public static void runOnlineExperimentThroughtput(){
+        RunManagerOnlineThroughput runManagerOnline = new RunManagerOnlineThroughput();
         runManagerOnline.runAllExperiments();
     }
 

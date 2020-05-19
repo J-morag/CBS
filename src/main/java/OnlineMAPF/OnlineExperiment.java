@@ -15,20 +15,28 @@ import java.util.Objects;
 public class OnlineExperiment extends Experiment {
 
     /**
-     * Nn array of COR (Cost Of Reroute) to run each instance under.
+     * An array of COR (Cost Of Reroute) to run each instance under.
      */
     public final int[] CORs;
     private int currentCOR = 0;
+    public final int[] spaceCapacities;
+    private int currentSpaceCapacity = 0;
+    public final int[] queueCapacities;
+    private int currentQueueCapacity = 0;
 
     /**
      * {@inheritDoc}
      * @param experimentName {@inheritDoc}
      * @param instanceManager {@inheritDoc}
      * @param coRs an array of COR (Cost Of Reroute) to run each instance under
+     * @param spaceCapacities
+     * @param queueCapacities
      */
-    public OnlineExperiment(String experimentName, InstanceManager instanceManager, int[] coRs) {
+    public OnlineExperiment(String experimentName, InstanceManager instanceManager, int[] coRs, int[] spaceCapacities, int[] queueCapacities) {
         super(experimentName, instanceManager);
         CORs = Objects.requireNonNullElse(coRs, new int[]{0});
+        this.spaceCapacities = Objects.requireNonNullElse(spaceCapacities, new int[]{0});
+        this.queueCapacities = Objects.requireNonNullElse(queueCapacities, new int[]{0});
     }
 
     /**
@@ -37,10 +45,14 @@ public class OnlineExperiment extends Experiment {
      * @param instanceManager {@inheritDoc}
      * @param numOfInstances {@inheritDoc}
      * @param coRs an array of COR (Cost Of Reroute) to run each instance under
+     * @param spaceCapacities
+     * @param queueCapacities
      */
-    public OnlineExperiment(String experimentName, InstanceManager instanceManager, int numOfInstances, int[] coRs) {
+    public OnlineExperiment(String experimentName, InstanceManager instanceManager, int numOfInstances, int[] coRs, int[] spaceCapacities, int[] queueCapacities) {
         super(experimentName, instanceManager, numOfInstances);
         CORs = Objects.requireNonNullElse(coRs, new int[]{0});
+        this.spaceCapacities = Objects.requireNonNullElse(spaceCapacities, new int[]{0});
+        this.queueCapacities = Objects.requireNonNullElse(queueCapacities, new int[]{0});
     }
 
     @Override
@@ -77,9 +89,15 @@ public class OnlineExperiment extends Experiment {
 
             for (int cor : CORs) {
                 currentCOR = cor;
-                for (I_Solver solver :
-                        solvers) {
-                    runInstanceOnSolver(solver, minNumFailedAgentsForInstance, instance);
+                for(int spaceCapacity : spaceCapacities){
+                    currentSpaceCapacity = spaceCapacity;
+                    for (int queueCapacity : queueCapacities){
+                        currentQueueCapacity = queueCapacity;
+                        for (I_Solver solver :
+                                solvers) {
+                            runInstanceOnSolver(solver, minNumFailedAgentsForInstance, instance);
+                        }
+                    }
                 }
             }
 
@@ -89,6 +107,9 @@ public class OnlineExperiment extends Experiment {
 
     @Override
     protected RunParameters getRunParameters(int timeout, InstanceReport instanceReport) {
-        return new RunParametersOnline(timeout, null, instanceReport, null, currentCOR);
+        RunParametersOnline runParametersOnline = new RunParametersOnline(timeout, null, instanceReport, null, currentCOR);
+        runParametersOnline.problemSpaceAgentCapacity = currentSpaceCapacity;
+        runParametersOnline.agentQueueCapacity = currentQueueCapacity;
+        return runParametersOnline;
     }
 }

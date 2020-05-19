@@ -14,6 +14,15 @@ public class RunParametersOnline extends RunParameters {
      */
     public int costOfReroute = 0;
 
+    /**
+     * The maximum allowed number of waiting agents
+     */
+    public int agentQueueCapacity = 0;
+    /**
+     * The maximum number of agents allowed concurrently in the problem space.
+     */
+    public int problemSpaceAgentCapacity = 10000;
+
     public RunParametersOnline(long timeout, ConstraintSet constraints, InstanceReport instanceReport, Solution existingSolution, int costOfReroute) {
         super(timeout, constraints, instanceReport, existingSolution);
         this.costOfReroute = costOfReroute;

@@ -122,7 +122,7 @@ public class RunManagerOnlineRuntimes extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        OnlineExperiment experiment = new OnlineExperiment("Compare Run-times", instanceManager, new int[]{0, 20});
+        OnlineExperiment experiment = new OnlineExperiment("Compare Run-times", instanceManager, new int[]{0, 20}, null, null);
         experiment.timeout = 5 * 60 * 1000;
         experiment.keepSolutionInReport = false;
         this.experiments.add(experiment);

@@ -122,7 +122,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        OnlineExperiment experiment = new OnlineExperiment("Long Time", instanceManager, null);
+        OnlineExperiment experiment = new OnlineExperiment("Long Time", instanceManager, null, null, null);
         experiment.keepSolutionInReport = false;
         this.experiments.add(experiment);
     }
@@ -140,7 +140,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        this.experiments.add(new OnlineExperiment("unique_agents_poisson", instanceManager, null));
+        this.experiments.add(new OnlineExperiment("unique_agents_poisson", instanceManager, null, null, null));
     }
 
     private void addExperimentRepeatingUniform() {
@@ -156,7 +156,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        this.experiments.add(new OnlineExperiment("repeatingUniform_agents_poisson", instanceManager, null));
+        this.experiments.add(new OnlineExperiment("repeatingUniform_agents_poisson", instanceManager, null, null, null));
     }
 
     private void addExperimentRepeatingNormal() {
@@ -172,7 +172,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        this.experiments.add(new OnlineExperiment("repeatingNormal_agents_poisson", instanceManager, null));
+        this.experiments.add(new OnlineExperiment("repeatingNormal_agents_poisson", instanceManager, null, null, null));
     }
 
     private void addExperimentsSmallMazes() {
@@ -188,7 +188,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        this.experiments.add(new OnlineExperiment("smallMazes", instanceManager, null));
+        this.experiments.add(new OnlineExperiment("smallMazes", instanceManager, null, null, null));
     }
 
     private void addExperimentsSmallCustom() {
@@ -204,7 +204,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        this.experiments.add(new OnlineExperiment("smallCustom", instanceManager, null));
+        this.experiments.add(new OnlineExperiment("smallCustom", instanceManager, null, null, null));
     }
 
 
@@ -221,7 +221,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        OnlineExperiment experiment = new OnlineExperiment("WaitingForGodot", instanceManager, null);
+        OnlineExperiment experiment = new OnlineExperiment("WaitingForGodot", instanceManager, null, null, null);
         experiment.keepSolutionInReport = true;
         this.experiments.add(experiment);
     }
@@ -238,7 +238,7 @@ public class RunManagerOnline2 extends A_RunManager {
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        OnlineExperiment experiment = new OnlineExperiment("Compare Run-times", instanceManager, new int[]{0, 1, 2, 3, 10, 50, 100});
+        OnlineExperiment experiment = new OnlineExperiment("Compare Run-times", instanceManager, new int[]{0, 1, 2, 3, 10, 50, 100}, null, null);
         experiment.keepSolutionInReport = false;
         this.experiments.add(experiment);
     }
