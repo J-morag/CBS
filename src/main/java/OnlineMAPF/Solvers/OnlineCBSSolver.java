@@ -3,6 +3,7 @@ package OnlineMAPF.Solvers;
 import BasicCBS.Instances.Agent;
 import BasicCBS.Instances.MAPF_Instance;
 import BasicCBS.Instances.Maps.I_Location;
+import BasicCBS.Solvers.CBS.CBS_Solver;
 import BasicCBS.Solvers.RunParameters;
 import BasicCBS.Solvers.SingleAgentPlan;
 import BasicCBS.Solvers.Solution;
@@ -36,11 +37,17 @@ public class OnlineCBSSolver implements I_OnlineSolver {
 
     protected long totalRuntime;
 
+    private CBS_Solver.CBSCostFunction costFunction;
+
     public OnlineCBSSolver() {
     }
 
     public OnlineCBSSolver(boolean preserveSolutionsInNewRoots) {
         this.preserveSolutionsInNewRoots = preserveSolutionsInNewRoots;
+    }
+
+    public OnlineCBSSolver(CBS_Solver.CBSCostFunction costFunction) {
+        this.costFunction = costFunction;
     }
 
     @Override
@@ -72,8 +79,9 @@ public class OnlineCBSSolver implements I_OnlineSolver {
 
     protected Solution solveForNewArrivals(int time, HashMap<Agent, I_Location> currentAgentLocations) {
         OnlineAStar onlineAStar = preserveSolutionsInNewRoots ? new OnlineAStar(this.costOfReroute, latestSolution) : new OnlineAStar(costOfReroute);
+        CBS_Solver.CBSCostFunction costFunction = this.costFunction != null ? this.costFunction : new COR_CBS_CostFunction(this.costOfReroute, latestSolution);
         OnlineCompatibleOfflineCBS offlineSolver = new OnlineCompatibleOfflineCBS(currentAgentLocations, time,
-                new COR_CBS_CostFunction(this.costOfReroute, latestSolution), onlineAStar);
+                costFunction, onlineAStar);
         MAPF_Instance subProblem = baseInstance.getSubproblemFor(currentAgentLocations.keySet());
         Solution previousSolution = preserveSolutionsInNewRoots ? new Solution(latestSolution) : null;
         RunParameters runParameters = new RunParameters(timeoutThreshold - totalRuntime, null, S_Metrics.newInstanceReport(), previousSolution);

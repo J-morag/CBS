@@ -2,6 +2,7 @@ package OnlineMAPF;
 
 import BasicCBS.Instances.InstanceManager;
 import BasicCBS.Instances.InstanceProperties;
+import BasicCBS.Solvers.CBS.Makespan;
 import Environment.A_RunManager;
 import Environment.IO_Package.IO_Manager;
 import Environment.Metrics.InstanceReport;
@@ -23,7 +24,12 @@ public class RunManagerOnlineThroughput extends A_RunManager {
     /*  = Set Solvers =  */
     @Override
     protected void setSolvers() {
-        this.solvers.add(new OnlineSolverContainer(new OnlineCBSSolver()));
+        OnlineCBSSolver snap_COR = new OnlineCBSSolver();
+        snap_COR.name = "snapshot-COR";
+        this.solvers.add(new OnlineSolverContainer(snap_COR));
+        OnlineCBSSolver snap_mkspn = new OnlineCBSSolver(new Makespan());
+        snap_mkspn.name = "snapshot-MKSPN";
+        this.solvers.add(new OnlineSolverContainer(snap_mkspn));
         this.solvers.add(new OnlineSolverContainer(new ReplanSingleGrouped(false)));
         this.solvers.add(new OnlineSolverContainer(new ThroughputPriority()));
     }
@@ -108,7 +114,8 @@ public class RunManagerOnlineThroughput extends A_RunManager {
     private void addExperimentThroughput() {
         /*  =   Set Path   =*/
         String path = IO_Manager.buildPath( new String[]{   IO_Manager.resources_Directory,
-                "Instances\\\\Online\\\\MovingAI_Instances\\\\Random-32-32-20"});
+//                "Instances\\\\Online\\\\MovingAI_Instances\\\\Random-32-32-20"});
+                "Instances\\\\Online\\\\MovingAI_Instances\\\\Random-32-32-20_appearanceRates"});
 
         /*  =   Set Properties   =  */
         InstanceProperties properties = new InstanceProperties(null, -1,
