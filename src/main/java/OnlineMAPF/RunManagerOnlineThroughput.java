@@ -30,7 +30,7 @@ public class RunManagerOnlineThroughput extends A_RunManager {
         OnlineCBSSolver snap_mkspn = new OnlineCBSSolver(new Makespan());
         snap_mkspn.name = "snapshot-MKSPN";
         this.solvers.add(new OnlineSolverContainer(snap_mkspn));
-        this.solvers.add(new OnlineSolverContainer(new ReplanSingleGrouped(false)));
+        this.solvers.add(new OnlineSolverContainer(new ReplanSingleGrouped(true)));
         this.solvers.add(new OnlineSolverContainer(new ThroughputPriority()));
     }
 
@@ -119,14 +119,14 @@ public class RunManagerOnlineThroughput extends A_RunManager {
 
         /*  =   Set Properties   =  */
         InstanceProperties properties = new InstanceProperties(null, -1,
-                new int[]{40});
+                new int[]{50});
 
         /*  =   Set Instance Manager   =  */
         InstanceManager instanceManager = new InstanceManager(path, new OnlineInstanceBuilder_MovingAI(), properties);
 
         /*  =   Add new experiment   =  */
-        OnlineExperiment experiment = new OnlineExperiment("Long Time", instanceManager, null,
-                new int[]{27}, new int[]{3});
+        OnlineExperiment experiment = new OnlineExperiment("Throughput", instanceManager, null,
+                new int[]{27}, new int[]{6});
         experiment.keepSolutionInReport = false;
         this.experiments.add(experiment);
     }
