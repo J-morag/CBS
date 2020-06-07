@@ -25,7 +25,7 @@ public class RunManagerOnlineThroughput extends A_RunManager {
     @Override
     protected void setSolvers() {
         OnlineCBSSolver snap_COR = new OnlineCBSSolver();
-        snap_COR.name = "snapshot-COR";
+        snap_COR.name = "snapshot-SOC";
         this.solvers.add(new OnlineSolverContainer(snap_COR));
         OnlineCBSSolver snap_mkspn = new OnlineCBSSolver(new Makespan());
         snap_mkspn.name = "snapshot-MKSPN";
