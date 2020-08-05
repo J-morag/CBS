@@ -41,15 +41,14 @@ public class Main {
 
     public static void main(String[] args) {
         if(verifyOutputPath()){
-//            runOnlineRuntimesExperiment();
-            runOnlineExperiment(new RunManagerSnapshotVSOracle());
+            runOnlineExperiment(new RunManagerCompetitiveRatio());
             try {
                 Thread.sleep(1100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             S_Metrics.clearAll();
-            runOnlineExperiment(new RunManagerOnlineCOR());
+//            runOnlineExperiment(new RunManagerOnlineCOR());
 
 //            // write the reports to System.out
 //            addConsoleAsOutputStream();

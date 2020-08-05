@@ -194,14 +194,14 @@ public class Experiment {
         return new RunParameters(timeout, null, instanceReport, null);
     }
 
-    private void recordFailure(MAPF_Instance instance, Map<String, Integer> failedInstances, I_Solver solver) {
+    protected void recordFailure(MAPF_Instance instance, Map<String, Integer> failedInstances, I_Solver solver) {
         Integer prevFailNumAgents = failedInstances.get(instanceAndSolverStringRepresentation(instance, solver));
         if (prevFailNumAgents == null || prevFailNumAgents > instance.agents.size()) {
             failedInstances.put(instanceAndSolverStringRepresentation(instance, solver), instance.agents.size());
         }
     }
 
-    private boolean hasFailedWithLessAgents(MAPF_Instance instance, Map<String, Integer> failedInstances, I_Solver solver) {
+    protected boolean hasFailedWithLessAgents(MAPF_Instance instance, Map<String, Integer> failedInstances, I_Solver solver) {
         Integer prevFailNumAgents = failedInstances.get(instanceAndSolverStringRepresentation(instance, solver));
         return prevFailNumAgents != null && prevFailNumAgents < instance.agents.size();
     }
