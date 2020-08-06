@@ -41,7 +41,7 @@ public class Main {
 
     public static void main(String[] args) {
         if(verifyOutputPath()){
-            runOnlineExperiment(new RunManagerCompetitiveRatio());
+            runOnlineExperiment(new RunManagerCompetitiveRatio2());
             try {
                 Thread.sleep(1100);
             } catch (InterruptedException e) {
