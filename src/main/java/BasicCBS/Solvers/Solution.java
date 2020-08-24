@@ -153,7 +153,7 @@ public class Solution implements Iterable<SingleAgentPlan>{
 
     @Override
     public String toString() {
-        return agentPlans.values().toString();
+        return this.readableToString();
     }
 
     //nicetohave JSON toString

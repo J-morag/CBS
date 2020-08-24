@@ -81,6 +81,13 @@ class OnlineCBSSolverTest {
     };
     private I_Map mapCorridors = MapFactory.newSimple4Connected2D_GraphMap(map_2D_corridors);
 
+    private Enum_MapCellType[][] CompetitiveRatio_Diameter_5 = {
+            {e, e, e, e},
+            {e, w, w, e},
+            {e, e, e, e},
+    };
+    private I_Map mapCompetitiveRatio_Diameter_5 = MapFactory.newSimple4Connected2D_GraphMap(CompetitiveRatio_Diameter_5);
+
     private I_Coordinate coor12 = new Coordinate_2D(1,2);
     private I_Coordinate coor13 = new Coordinate_2D(1,3);
     private I_Coordinate coor14 = new Coordinate_2D(1,4);
@@ -126,6 +133,9 @@ class OnlineCBSSolverTest {
     private OnlineAgent agent53to05t7 = new OnlineAgent(new Agent(12, coor53, coor05), 7);
     private OnlineAgent agent12to33t0anotherOne = new OnlineAgent(new Agent(13, coor12, coor33), 0);
 
+    private OnlineAgent agent13to10 = new OnlineAgent(0, coor13, coor10, 0);
+    private OnlineAgent agent00to02 = new OnlineAgent(1, coor00, coor02, 3);
+
     InstanceBuilder_BGU builder = new OnlineInstanceBuilder_BGU();
     InstanceManager im_BGU = new InstanceManager(IO_Manager.buildPath( new String[]{   IO_Manager.testResources_Directory,"Instances", "Online"}),
             builder, new InstanceProperties());
@@ -146,6 +156,8 @@ class OnlineCBSSolverTest {
     private MAPF_Instance instanceMultipleAgentsSameSourcesTargets = new MAPF_Instance("instanceEmpty", mapEmpty, new Agent[]
             {agent12to33t0, agent12to34t0, agent11to33t0, agent12to33t1, agent12to33t3, agent12to33t6, agent12to33t7, agent53to05t1,
                     agent53to05t4, agent53to05t5, agent53to05t6, agent53to05t7, agent12to33t0anotherOne});
+    private MAPF_Instance instanceDiameter5 = new MAPF_Instance("instanceDiameter5", mapCompetitiveRatio_Diameter_5,
+            new Agent[]{agent13to10, agent00to02});
 
     private I_Solver solver = new OnlineSolverContainer(new OnlineCBSSolver());
 
@@ -521,5 +533,15 @@ class OnlineCBSSolverTest {
         // reroutes don't happen when solving offline, so should be 0.
         int rerouteCostsWhenOffline = ((OnlineSolution)solvedOffline).costOfReroutes(costOfReroute);
         assertEquals(0, rerouteCostsWhenOffline);
+    }
+
+    @Test
+    void optimalWhenUsingPreserveSolutionInRoot() {
+        MAPF_Instance testInstance = instanceDiameter5;
+        I_Solver solverWithRootPreservation = new OnlineSolverContainer(new OnlineCBSSolver(true));
+        Solution solved = solverWithRootPreservation.solve(testInstance, new RunParameters(instanceReport));
+
+        System.out.println(solved.readableToString());
+        validate(solved, 2, 9, 5, testInstance);
     }
 }

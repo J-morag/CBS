@@ -3,18 +3,21 @@ package OnlineMAPF.Solvers;
 import BasicCBS.Instances.Agent;
 import BasicCBS.Instances.MAPF_Instance;
 import BasicCBS.Instances.Maps.I_Location;
-import BasicCBS.Solvers.*;
 import BasicCBS.Solvers.AStar.DistanceTableAStarHeuristic;
 import BasicCBS.Solvers.AStar.RunParameters_SAAStar;
 import BasicCBS.Solvers.CBS.CBS_Solver;
 import BasicCBS.Solvers.ConstraintsAndConflicts.ConflictManagement.I_ConflictManager;
 import BasicCBS.Solvers.ConstraintsAndConflicts.ConflictManagement.NaiveConflictDetection;
-import BasicCBS.Solvers.ConstraintsAndConflicts.ConflictManagement.SingleUseConflictAvoidanceTable;
 import BasicCBS.Solvers.ConstraintsAndConflicts.Constraint.ConstraintSet;
+import BasicCBS.Solvers.RunParameters;
+import BasicCBS.Solvers.SingleAgentPlan;
+import BasicCBS.Solvers.Solution;
 import Environment.Metrics.InstanceReport;
-import OnlineMAPF.*;
+import OnlineMAPF.OnlineAgent;
+import OnlineMAPF.OnlineConstraintSet;
+import OnlineMAPF.OnlineDistanceTableAStarHeuristic;
+import OnlineMAPF.OnlineSolution;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -100,7 +103,8 @@ public class OnlineCompatibleOfflineCBS extends CBS_Solver {
                 }
                 else{
                     trimmedPlanCopy = new SingleAgentPlan(agent);
-                    for(int time = customStartTime; time <= existingPlan.getEndTime(); time++){
+                    for(int time = customStartTime + 1 /*starts with the move that comes after the arrival of the new agents*/
+                        ; time <= existingPlan.getEndTime(); time++){
                         trimmedPlanCopy.addMove(existingPlan.moveAt(time));
                     }
                 }
